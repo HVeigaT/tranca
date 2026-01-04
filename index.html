@@ -29,17 +29,24 @@ const db = firebase.firestore();
 
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #f2f2f2;
     margin: 0;
     padding: 0;
+
+    background-image: url("bg.jpg"); /* caminho da imagem */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
 .container {
     max-width: 420px;
     margin: auto;
     min-height: 100vh;
-    background: #ffffff;
+
+    background: rgba(255, 255, 255, 0.92); /* branco com transparência */
     padding: 16px;
+    backdrop-filter: blur(2px);
 }
 
 h2 {
@@ -442,3 +449,4 @@ function editPerson() {
 
 </body>
 </html>
+
