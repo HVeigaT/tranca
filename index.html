@@ -118,39 +118,6 @@ th, td {
 #rankingFilter {
     margin-bottom: 10px;
 }
-  .screen {
-    background: rgba(255, 255, 255, 0.92);
-    padding: 16px;
-    border-radius: 16px;
-    max-width: 420px;
-    margin: auto;
-}
-
-select, input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 8px;
-    font-size: 16px;
-}
-
-button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 8px;
-    border: none;
-    border-radius: 10px;
-    background: #1e73be;
-    color: white;
-    font-size: 16px;
-}
-
-button.secondary {
-    background: #999;
-}
-
-button:disabled {
-    background: #ccc;
-}
 
 /* Melhor leitura em telas muito pequenas */
 @media (max-width: 360px) {
@@ -167,9 +134,8 @@ button:disabled {
 <!-- TELA INICIAL -->
 <div id="home">
     <h2>♣️♥️Placar Tranca♠️♦️</h2>
-    <button onclick="showLiveScore()">Placar</button>
     <button onclick="showScreen('result')">Inserir Resultado</button>
-    <button onclick="showScreen('ranking')">Ranking</button>
+    <button onclick="showScreen('ranking')">Ver Ranking</button>
     <button onclick="showScreen('duplas')">Visão Duplas</button>
     <button onclick="showScreen('rankingYear')">Ranking por Ano</button>
     <button onclick="showScreen('newPerson')">Nova Pessoa</button>
@@ -255,34 +221,6 @@ button:disabled {
     <button class="back" onclick="showScreen('home')">Voltar</button>
 </div>
   
-  <div id="liveScoreScreen" class="screen hidden">
-    <h2>Placar</h2>
-
-    <h3>Dupla 1</h3>
-    <select id="d1p1"></select>
-    <select id="d1p2"></select>
-    <p>Pontos: <span id="scoreD1">0</span></p>
-
-    <h3>Dupla 2</h3>
-    <select id="d2p1"></select>
-    <select id="d2p2"></select>
-    <p>Pontos: <span id="scoreD2">0</span></p>
-
-    <hr>
-
-    <h3>Inserir Pontuação da Mão</h3>
-    <input type="number" id="pointsD1" placeholder="Dupla 1">
-    <input type="number" id="pointsD2" placeholder="Dupla 2">
-
-    <button onclick="addHand()">Adicionar Mão</button>
-
-    <button id="finishGameBtn" disabled onclick="finalizeGameManual()">
-        Finalizar Jogo
-    </button>
-
-    <button class="secondary" onclick="goHome()">Voltar</button>
-</div>
-
   <!-- RANKING POR ANO -->
 <div id="rankingYear" class="hidden">
     <h2>Ranking por Ano</h2>
@@ -628,122 +566,6 @@ async function loadYears() {
                 <td>${pct}%</td>
             </tr>
         `;
-    });
-}
-  let game = {
-    dupla1: { players: [], score: 0 },
-    dupla2: { players: [], score: 0 },
-    finished: false
-};
-
-  function showLiveScore() {
-    hideAllScreens();
-    document
-        .getElementById("liveScoreScreen")
-        .classList.remove("hidden");
-}
-
-  function loadPlayersIntoCombos() {
-    const selects = ["d1p1", "d1p2", "d2p1", "d2p2"];
-    selects.forEach(id => {
-        const sel = document.getElementById(id);
-        sel.innerHTML = `<option value="">Selecione</option>`;
-        people.forEach(p => {
-            sel.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-        });
-    });
-}
-
-  function addHand() {
-    const p1 = Number(pointsD1.value) || 0;
-    const p2 = Number(pointsD2.value) || 0;
-
-    game.dupla1.score += p1;
-    game.dupla2.score += p2;
-
-    updateScore();
-    checkWinner();
-
-    pointsD1.value = "";
-    pointsD2.value = "";
-}
-  
-function updateScore() {
-    scoreD1.innerText = game.dupla1.score;
-    scoreD2.innerText = game.dupla2.score;
-}
-
-  function checkWinner() {
-    const s1 = game.dupla1.score;
-    const s2 = game.dupla2.score;
-
-    if (s1 >= 2000 || s2 >= 2000) {
-        document.getElementById("finishGameBtn").disabled = false;
-
-        if (s1 !== s2) {
-            finalizeGame();
-        }
-    }
-}
-  
-function finalizeGame() {
-    if (game.finished) return;
-    game.finished = true;
-
-    game.dupla1.players = [
-        d1p1.value,
-        d1p2.value
-    ];
-    game.dupla2.players = [
-        d2p1.value,
-        d2p2.value
-    ];
-
-    let winners, losers;
-
-    if (game.dupla1.score > game.dupla2.score) {
-        winners = game.dupla1.players;
-        losers = game.dupla2.players;
-    } else {
-        winners = game.dupla2.players;
-        losers = game.dupla1.players;
-    }
-
-    saveMatch(winners, losers);
-    alert("Jogo encerrado! Vitória registrada.");
-    goHome();
-}
-
-  function finalizeGameManual() {
-    finalizeGame();
-}
-
-  async function saveMatch(winners, losers) {
-    const now = new Date();
-
-    await addDoc(collection(db, "matches"), {
-        winners,
-        losers,
-        date: now.toISOString(),
-        year: now.getFullYear(),
-        month: now.getMonth() + 1
-    });
-}
-
-  function goHome() {
-    game = {
-        dupla1: { players: [], score: 0 },
-        dupla2: { players: [], score: 0 },
-        finished: false
-    };
-    updateScore();
-    hideAllScreens();
-    document.getElementById("homeScreen").classList.remove("hidden");
-}
-  
-  function hideAllScreens() {
-    document.querySelectorAll(".screen").forEach(screen => {
-        screen.classList.add("hidden");
     });
 }
 
