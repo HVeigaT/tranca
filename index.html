@@ -85,7 +85,13 @@ th, td {
 
 <!-- RANKING -->
 <div id="ranking" class="hidden">
+  
     <h2>Ranking</h2>
+  <select id="rankingFilter" onchange="loadRanking()">
+    <option value="wins">Mais vitórias</option>
+    <option value="percentage">Maior % de vitória</option>
+</select>
+
     <table>
         <thead>
             <tr>
@@ -172,20 +178,38 @@ function addPerson() {
     newName.value = "";
 }
 
+//loadRanking começa
 function loadRanking() {
     const body = document.getElementById("rankingBody");
+    const filter = document.getElementById("rankingFilter").value;
     body.innerHTML = "";
-    [...people].sort((a,b)=>b.wins-a.wins).forEach(p => {
-        const pct = p.games ? ((p.wins/p.games)*100).toFixed(1) : 0;
-        body.innerHTML += `<tr>
-            <td>${p.name}</td>
-            <td>${p.games}</td>
-            <td>${p.wins}</td>
-            <td>${pct}%</td>
-        </tr>`;
+
+    let sorted = [...people];
+
+    if (filter === "wins") {
+        sorted.sort((a, b) => b.wins - a.wins);
+    } else if (filter === "percentage") {
+        sorted.sort((a, b) => {
+            const pctA = a.games ? a.wins / a.games : 0;
+            const pctB = b.games ? b.wins / b.games : 0;
+            return pctB - pctA;
+        });
+    }
+
+    sorted.forEach(p => {
+        const pct = p.games ? ((p.wins / p.games) * 100).toFixed(1) : 0;
+        body.innerHTML += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.games}</td>
+                <td>${p.wins}</td>
+                <td>${pct}%</td>
+            </tr>
+        `;
     });
 }
-
+//loadRanking termina
+  
 function loadCombos() {
     ["win1","win2","lose1","lose2"].forEach(id => {
         const s = document.getElementById(id);
@@ -239,4 +263,5 @@ function editPerson() {
 
 </body>
 </html>
+
 
