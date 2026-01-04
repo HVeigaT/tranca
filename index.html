@@ -126,10 +126,6 @@ th, td {
     margin: auto;
 }
 
-.hidden {
-    display: none;
-}
-
 select, input {
     width: 100%;
     padding: 10px;
@@ -642,8 +638,9 @@ async function loadYears() {
 
   function showLiveScore() {
     hideAllScreens();
-    document.getElementById("liveScoreScreen").classList.remove("hidden");
-    loadPlayersIntoCombos();
+    document
+        .getElementById("liveScoreScreen")
+        .classList.remove("hidden");
 }
 
   function loadPlayersIntoCombos() {
@@ -742,6 +739,12 @@ function finalizeGame() {
     updateScore();
     hideAllScreens();
     document.getElementById("homeScreen").classList.remove("hidden");
+}
+  
+  function hideAllScreens() {
+    document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.add("hidden");
+    });
 }
 
 </script>
