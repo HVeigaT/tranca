@@ -1,4 +1,22 @@
 <!DOCTYPE html>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBwnx21HTz7lXK9ByFk0Cvyma6cQ3EFqIo",
+  authDomain: "tranca-bdb16.firebaseapp.com",
+  projectId: "tranca-bdb16",
+  storageBucket: "tranca-bdb16.firebasestorage.app",
+  messagingSenderId: "581913871040",
+  appId: "1:581913871040:web:d5209cb2fa308a58b5e325",
+  measurementId: "G-VSG09NVFQ4"
+};
+    
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -118,7 +136,15 @@ th, td {
 </div>
 
 <script>
-let people = JSON.parse(localStorage.getItem("people")) || [];
+let people = [];
+
+db.collection("people").onSnapshot(snapshot => {
+    people = [];
+    snapshot.forEach(doc => {
+        people.push({ id: doc.id, ...doc.data() });
+    });
+});
+
 
 function saveData() {
     localStorage.setItem("people", JSON.stringify(people));
@@ -134,12 +160,16 @@ function showScreen(id) {
 }
 
 function addPerson() {
-    const name = document.getElementById("newName").value.trim();
+    const name = newName.value.trim();
     if (!name) return alert("Informe um nome");
-    people.push({ name, games: 0, wins: 0 });
-    saveData();
-    document.getElementById("newName").value = "";
-    alert("Pessoa adicionada!");
+
+    db.collection("people").add({
+        name,
+        games: 0,
+        wins: 0
+    });
+
+    newName.value = "";
 }
 
 function loadRanking() {
@@ -167,16 +197,24 @@ function loadCombos() {
 }
 
 function saveResult() {
-    const w1 = win1.value, w2 = win2.value, l1 = lose1.value, l2 = lose2.value;
-    if (new Set([w1,w2,l1,l2]).size < 4) {
+    const ids = [win1.value, win2.value, lose1.value, lose2.value];
+    if (new Set(ids).size < 4) {
         return alert("As duplas devem ser diferentes");
     }
-    [w1,w2,l1,l2].forEach(i => people[i].games++);
-    people[w1].wins++;
-    people[w2].wins++;
-    saveData();
+
+    ids.forEach(i => {
+        const ref = db.collection("people").doc(people[i].id);
+        ref.update({ games: firebase.firestore.FieldValue.increment(1) });
+    });
+
+    [win1.value, win2.value].forEach(i => {
+        const ref = db.collection("people").doc(people[i].id);
+        ref.update({ wins: firebase.firestore.FieldValue.increment(1) });
+    });
+
     alert("Resultado salvo!");
 }
+
 
 function loadEditCombo() {
     const s = document.getElementById("editSelect");
@@ -189,13 +227,16 @@ function loadEditCombo() {
 function editPerson() {
     const idx = editSelect.value;
     const newName = editName.value.trim();
-    if (!newName) return alert("Informe o nome");
-    people[idx].name = newName;
-    saveData();
+    if (!newName) return;
+
+    db.collection("people")
+      .doc(people[idx].id)
+      .update({ name: newName });
+
     editName.value = "";
-    alert("Nome alterado!");
 }
 </script>
 
 </body>
 </html>
+
