@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Placar Familiar</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 500px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+}
+h2 {
+    text-align: center;
+}
+button {
+    width: 100%;
+    padding: 10px;
+    margin: 6px 0;
+    font-size: 16px;
+}
+input, select {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+}
+.hidden {
+    display: none;
+}
+.back {
+    background: #ccc;
+}
+.save {
+    background: #4CAF50;
+    color: white;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- TELA INICIAL -->
+<div id="home">
+    <h2>Placar Familiar</h2>
+    <button onclick="showScreen('result')">Inserir Resultado</button>
+    <button onclick="showScreen('ranking')">Ver Ranking</button>
+    <button onclick="showScreen('newPerson')">Nova Pessoa</button>
+    <button onclick="showScreen('editPerson')">Editar Pessoa</button>
+</div>
+
+<!-- RANKING -->
+<div id="ranking" class="hidden">
+    <h2>Ranking</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Jogos</th>
+                <th>Vitórias</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody id="rankingBody"></tbody>
+    </table>
+    <button class="back" onclick="showScreen('home')">Voltar</button>
+</div>
+
+<!-- INSERIR RESULTADO -->
+<div id="result" class="hidden">
+    <h2>Inserir Resultado</h2>
+
+    <strong>Dupla Vencedora</strong>
+    <select id="win1"></select>
+    <select id="win2"></select>
+
+    <strong>Dupla Perdedora</strong>
+    <select id="lose1"></select>
+    <select id="lose2"></select>
+
+    <button class="save" onclick="saveResult()">Salvar</button>
+    <button class="back" onclick="showScreen('home')">Voltar</button>
+</div>
+
+<!-- NOVA PESSOA -->
+<div id="newPerson" class="hidden">
+    <h2>Nova Pessoa</h2>
+    <input id="newName" placeholder="Nome da pessoa">
+    <button class="save" onclick="addPerson()">Salvar</button>
+    <button class="back" onclick="showScreen('home')">Voltar</button>
+</div>
+
+<!-- EDITAR PESSOA -->
+<div id="editPerson" class="hidden">
+    <h2>Editar Pessoa</h2>
+    <select id="editSelect"></select>
+    <input id="editName" placeholder="Novo nome">
+    <button class="save" onclick="editPerson()">Salvar</button>
+    <button class="back" onclick="showScreen('home')">Voltar</button>
+</div>
+
+</div>
+
+<script>
+let people = JSON.parse(localStorage.getItem("people")) || [];
+
+function saveData() {
+    localStorage.setItem("people", JSON.stringify(people));
+}
+
+function showScreen(id) {
+    document.querySelectorAll(".container > div").forEach(d => d.classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+
+    if (id === "ranking") loadRanking();
+    if (id === "result") loadCombos();
+    if (id === "editPerson") loadEditCombo();
+}
+
+function addPerson() {
+    const name = document.getElementById("newName").value.trim();
+    if (!name) return alert("Informe um nome");
+    people.push({ name, games: 0, wins: 0 });
+    saveData();
+    document.getElementById("newName").value = "";
+    alert("Pessoa adicionada!");
+}
+
+function loadRanking() {
+    const body = document.getElementById("rankingBody");
+    body.innerHTML = "";
+    [...people].sort((a,b)=>b.wins-a.wins).forEach(p => {
+        const pct = p.games ? ((p.wins/p.games)*100).toFixed(1) : 0;
+        body.innerHTML += `<tr>
+            <td>${p.name}</td>
+            <td>${p.games}</td>
+            <td>${p.wins}</td>
+            <td>${pct}%</td>
+        </tr>`;
+    });
+}
+
+function loadCombos() {
+    ["win1","win2","lose1","lose2"].forEach(id => {
+        const s = document.getElementById(id);
+        s.innerHTML = "";
+        people.forEach((p,i) => {
+            s.innerHTML += `<option value="${i}">${p.name}</option>`;
+        });
+    });
+}
+
+function saveResult() {
+    const w1 = win1.value, w2 = win2.value, l1 = lose1.value, l2 = lose2.value;
+    if (new Set([w1,w2,l1,l2]).size < 4) {
+        return alert("As duplas devem ser diferentes");
+    }
+    [w1,w2,l1,l2].forEach(i => people[i].games++);
+    people[w1].wins++;
+    people[w2].wins++;
+    saveData();
+    alert("Resultado salvo!");
+}
+
+function loadEditCombo() {
+    const s = document.getElementById("editSelect");
+    s.innerHTML = "";
+    people.forEach((p,i) => {
+        s.innerHTML += `<option value="${i}">${p.name}</option>`;
+    });
+}
+
+function editPerson() {
+    const idx = editSelect.value;
+    const newName = editName.value.trim();
+    if (!newName) return alert("Informe o nome");
+    people[idx].name = newName;
+    saveData();
+    editName.value = "";
+    alert("Nome alterado!");
+}
+</script>
+
+</body>
+</html>
