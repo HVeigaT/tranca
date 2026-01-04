@@ -287,14 +287,19 @@ function loadRanking() {
 //loadRanking termina
   
 function loadCombos() {
+    const sortedPeople = getPeopleSortedByName();
+
     ["win1","win2","lose1","lose2"].forEach(id => {
         const s = document.getElementById(id);
-        s.innerHTML = "";
-        people.forEach((p,i) => {
-            s.innerHTML += `<option value="${i}">${p.name}</option>`;
+        s.innerHTML = "<option value=''>Selecione</option>";
+
+        sortedPeople.forEach(p => {
+            const index = people.findIndex(x => x.id === p.id);
+            s.innerHTML += `<option value="${index}">${p.name}</option>`;
         });
     });
-  updatePlayerLocks();
+
+    updatePlayerLocks();
 }
 
 function saveResult() {
@@ -328,12 +333,13 @@ function saveResult() {
     alert("Resultado salvo!");
 }
 
-
 function loadEditCombo() {
     const s = document.getElementById("editSelect");
     s.innerHTML = "";
-    people.forEach((p,i) => {
-        s.innerHTML += `<option value="${i}">${p.name}</option>`;
+
+    getPeopleSortedByName().forEach(p => {
+        const index = people.findIndex(x => x.id === p.id);
+        s.innerHTML += `<option value="${index}">${p.name}</option>`;
     });
 }
 
@@ -373,7 +379,7 @@ function editPerson() {
     const select = document.getElementById("duplaPerson");
     select.innerHTML = "<option value=''>Selecione uma pessoa</option>";
 
-    people.forEach(p => {
+    getPeopleSortedByName().forEach(p => {
         select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
     });
 }
@@ -426,11 +432,13 @@ function editPerson() {
     });
 }
 
+  function getPeopleSortedByName() {
+    return [...people].sort((a, b) =>
+        a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
+    );
+}
+
 </script>
 
 </body>
 </html>
-
-
-
-
