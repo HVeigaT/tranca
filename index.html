@@ -137,6 +137,7 @@ th, td {
     <button onclick="showScreen('result')">Inserir Resultado</button>
     <button onclick="showScreen('ranking')">Ver Ranking</button>
     <button onclick="showScreen('duplas')">Visão Duplas</button>
+    <button onclick="showScreen('rankingYear')">Ranking por Ano</button>
     <button onclick="showScreen('newPerson')">Nova Pessoa</button>
     <button onclick="showScreen('editPerson')">Editar Pessoa</button>
 </div>
@@ -219,6 +220,33 @@ th, td {
 
     <button class="back" onclick="showScreen('home')">Voltar</button>
 </div>
+  
+  <!-- RANKING POR ANO -->
+<div id="rankingYear" class="hidden">
+    <h2>Ranking por Ano</h2>
+
+    <select id="yearSelect" onchange="loadMonths()">
+        <option value="">Selecione o ano</option>
+    </select>
+
+    <select id="monthSelect" class="hidden" onchange="loadYearRanking()">
+        <option value="">Todos os meses</option>
+    </select>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Jogos</th>
+                <th>Vitórias</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody id="yearRankingBody"></tbody>
+    </table>
+
+    <button class="back" onclick="showScreen('home')">Voltar</button>
+</div>
 
 </div>
 
@@ -245,6 +273,7 @@ function showScreen(id) {
     if (id === "result") loadCombos();
     if (id === "editPerson") loadEditCombo();
     if (id === "duplas") loadDuplasSelect();
+    if (id === "rankingYear") loadYears();
 
 }
 
@@ -334,8 +363,11 @@ function saveResult() {
         people[lose1.value].id,
         people[lose2.value].id
     ],
-    date: new Date().toISOString()
+    date: new Date(),          // data do device
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1 // 1 a 12
 });
+
 
     alert("Resultado salvo!");
 }
@@ -445,9 +477,99 @@ function editPerson() {
     );
 }
 
+async function loadYears() {
+    const select = document.getElementById("yearSelect");
+    select.innerHTML = "<option value=''>Selecione o ano</option>";
+
+    const snapshot = await db.collection("matches").get();
+    const years = new Set();
+
+    snapshot.forEach(doc => {
+        years.add(doc.data().year);
+    });
+
+    [...years].sort().forEach(y => {
+        select.innerHTML += `<option value="${y}">${y}</option>`;
+    });
+}
+
+  function loadMonths() {
+    const year = yearSelect.value;
+    const monthSelect = document.getElementById("monthSelect");
+
+    if (!year) {
+        monthSelect.classList.add("hidden");
+        return;
+    }
+
+    monthSelect.classList.remove("hidden");
+    monthSelect.innerHTML = `
+        <option value="">Anual</option>
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3">Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+    `;
+
+    loadYearRanking();
+}
+
+  async function loadYearRanking() {
+    const year = parseInt(yearSelect.value);
+    const month = monthSelect.value ? parseInt(monthSelect.value) : null;
+    const body = document.getElementById("yearRankingBody");
+    body.innerHTML = "";
+
+    if (!year) return;
+
+    const snapshot = await db.collection("matches")
+        .where("year", "==", year)
+        .get();
+
+    const stats = {};
+
+    snapshot.forEach(doc => {
+        const m = doc.data();
+        if (month && m.month !== month) return;
+
+        [...m.teamWin, ...m.teamLose].forEach(pid => {
+            if (!stats[pid]) stats[pid] = { games: 0, wins: 0 };
+            stats[pid].games++;
+        });
+
+        m.teamWin.forEach(pid => {
+            stats[pid].wins++;
+        });
+    });
+
+    Object.keys(stats).forEach(pid => {
+        const p = people.find(x => x.id === pid);
+        if (!p) return;
+
+        const games = stats[pid].games;
+        const wins = stats[pid].wins;
+        const pct = ((wins / games) * 100).toFixed(1);
+
+        body.innerHTML += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${games}</td>
+                <td>${wins}</td>
+                <td>${pct}%</td>
+            </tr>
+        `;
+    });
+}
+
 </script>
 
 </body>
 </html>
-
-
